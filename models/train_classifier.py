@@ -10,10 +10,55 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
+from sklearn.base import BaseEstimator, TransformerMixin
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+
+# Before defining functions define some classes to be subsequently used in
+# the machine learning pipeline to create additional features
+
+class TextLengthExtractor(BaseEstimator, TransformerMixin):
+    ''' This class is used in the machine learning pipeline
+        to identify the length of the different messages.
+    '''
+
+    def text_length(self, text):
+        tokenized = tokenize(text)
+        length = len(tokenized)
+        return length
+
+    def fit(self, x, y=None):
+        return self
+
+    def transform(self, X):
+        X_tagged = pd.Series(X).apply(self.text_length)
+        return pd.DataFrame(X_tagged)
+    
+class ContainsPlace(BaseEstimator, TransformerMixin):
+    ''' This class is used in the machine learning pipeline
+        to identify using part of spech whether a given message contains 
+        a reference to at least one place.
+    '''
+    
+    def contains_place(self, text):
+        tokenised = tokenize(text)
+        # Using approach from 
+        # https://stackoverflow.com/questions/31836058/nltk-named-entity-recognition-to-a-python-list
+        # to access tags inside part of speech tagging
+        for chunk in nltk.ne_chunk(nltk.pos_tag(tokenised)):
+            if hasattr(chunk, 'label'):
+                if chunk.label() == 'GPE':
+                    return True
+        return False
+
+    def fit(self, x, y=None):
+        return self
+
+    def transform(self, X):
+        X_tagged = pd.Series(X).apply(self.contains_place)
+        return pd.DataFrame(X_tagged)
 
 def load_data(database_filepath):
     '''Loads data from specified database and returns
@@ -70,8 +115,33 @@ def tokenize(text):
 
 
 def build_model():
-    pass
-
+    ''' Creates a machine learning pipeline which is then nested into a grid
+        search cross validation object
+    '''
+    # Define a machine learning pipeline
+    pipeline = Pipeline([
+    ('features', FeatureUnion([
+            ('text_pipeline', Pipeline([
+                    ('vect', CountVectorizer(tokenizer=tokenize)),
+                    ('tfidf', TfidfTransformer())
+            ])),
+            ('text_length', TextLengthExtractor()),
+            ('contains_place', ContainsPlace())
+        ])),
+    ('clf', MultiOutputClassifier(RandomForestClassifier(random_state=64)))
+    ])
+    
+    # Define parameters to search for in grid search
+    parameters = {
+    'features__text_pipeline__vect__max_df':(0.75, 1.0),
+    'features__text_pipeline__vect__max_features':(None, 2000, 5000),
+    'clf__estimator__n_estimators':[100,200],
+    'clf__estimator__min_samples_split':[3, 4],
+    }
+    # Define grid search object using pipeline and parameters
+    cv = GridSearchCV(pipeline, param_grid = parameters, n_jobs=-1, verbose=2)
+    
+    return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
     pass
