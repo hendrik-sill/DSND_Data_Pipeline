@@ -15,6 +15,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+import pickle
 
 # Before defining functions define some classes to be subsequently used in
 # the machine learning pipeline to create additional features
@@ -144,12 +145,40 @@ def build_model():
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    '''Uses trained multioutput model/ pipeline and evaluates it based on 
+       test data. Metrics are printed.
+    INPUT
+        model - trained sklearn model/ pipeline 
+        X_test - test data features
+        Y_test - test data labels
+        category_names - names of categories used in model/ pipeline
+    OUTPUT
+        None
+    '''
+    # Obtain predictions for test data 
+    Y_pred = model.predict(X_test)
+
+    # Evaluate test data against labels
+    for i, col in enumerate(category_names):
+        print('Feature: {}'.format(col))
+    
+        col_true = list(Y_test.values[:,i])
+        col_pred = list(Y_pred[:, i])
+        print(classification_report(col_true, col_pred))
 
 
 def save_model(model, model_filepath):
-    pass
-
+    '''Takes a trained sklearn model and saves it as a pickle file at the 
+       specified filepath.
+    INPUT
+        model - trained sklearn model
+        model_filepath - filepath where the model will be saved
+    OUTPUT
+        None
+    '''
+    # Save model as explained at 
+    # https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
+    pickle.dump(model, open(model_filepath,'wb'))
 
 def main():
     if len(sys.argv) == 3:
