@@ -1,5 +1,8 @@
 # Disaster Response Pipeline Project
 
+### Required Packages
+I used Python 3.6.7 (Anaconda distribution) for this project. If you are using the Anaconda distribution of Python, you will only need to install the plotly package. On other Python distributions, you may also need to install Pandas, Numpy, and scikit-learn.
+
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
 
