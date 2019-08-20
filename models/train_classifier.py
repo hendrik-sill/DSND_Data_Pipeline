@@ -1,6 +1,5 @@
 import sys
 import pandas as pd
-import numpy as np
 from sqlalchemy import create_engine
 import re
 from sklearn.multioutput import MultiOutputClassifier
@@ -15,7 +14,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-import pickle
+from sklearn.externals import joblib
 
 # Before defining functions define some classes to be subsequently used in
 # the machine learning pipeline to create additional features
@@ -83,6 +82,8 @@ def load_data(database_filepath):
     # Take care of instances of category related containing a value of 2 
     # and replace them with  1
     Y['related'].replace(2,1, inplace=True)
+    # Convert all Y columns to ints
+    Y = Y.apply(pd.to_numeric)
     # Obtain categories names from Y column names
     categories = Y.columns
     return X, Y, categories
@@ -132,16 +133,15 @@ def build_model():
     ('clf', MultiOutputClassifier(RandomForestClassifier(random_state=64)))
     ])
     
-    # Define parameters to search for in grid search
+    #Define parameters to search for in grid search
     parameters = {
     'features__text_pipeline__vect__max_df':(0.75, 1.0),
-    'features__text_pipeline__vect__max_features':(None, 2000, 5000),
+    'features__text_pipeline__vect__max_features':(None, 5000),
     'clf__estimator__n_estimators':[100,200],
-    'clf__estimator__min_samples_split':[3, 4],
+    'clf__estimator__min_samples_split':[3, 4]
     }
     # Define grid search object using pipeline and parameters
-    cv = GridSearchCV(pipeline, param_grid = parameters, n_jobs=-1, verbose=2)
-    
+    cv = GridSearchCV(pipeline, param_grid = parameters,verbose=2, cv = 3) 
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -178,7 +178,7 @@ def save_model(model, model_filepath):
     '''
     # Save model as explained at 
     # https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
-    pickle.dump(model, open(model_filepath,'wb'))
+    joblib.dump(model, model_filepath)
 
 def main():
     if len(sys.argv) == 3:
@@ -186,7 +186,8 @@ def main():
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        
+        print(X.dtypes)
+        print(Y.dtypes)
         print('Building model...')
         model = build_model()
         
