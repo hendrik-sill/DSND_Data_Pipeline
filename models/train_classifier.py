@@ -7,6 +7,7 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score, make_scorer
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -141,7 +142,10 @@ def build_model():
     'clf__estimator__min_samples_split':[3, 4]
     }
     # Define grid search object using pipeline and parameters
-    cv = GridSearchCV(pipeline, param_grid = parameters,verbose=2, cv = 3) 
+    # Use micro average (to deal with class imbalances) of f1_score 
+    # for scoring as suggested at https://knowledge.udacity.com/questions/20810
+    cv = GridSearchCV(pipeline, param_grid = parameters,verbose=2, cv = 3,
+                      score = make_scorer(f1_score, average = 'micro')) 
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -177,8 +181,10 @@ def save_model(model, model_filepath):
         None
     '''
     # Save model as explained at 
-    # https://machinelearningmastery.com/save-load-machine-learning-models-python-scikit-learn/
-    joblib.dump(model, model_filepath)
+    # https://machinelearningmastery.com/save-load-machine-learning-models
+    #-python-scikit-learn/
+    # Use compression to prevent pickle from becoming too large
+    joblib.dump(model, model_filepath, compress = 5)
 
 def main():
     if len(sys.argv) == 3:

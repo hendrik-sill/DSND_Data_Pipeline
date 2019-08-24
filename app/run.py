@@ -2,16 +2,17 @@ import json
 import plotly
 import pandas as pd
 
+import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-
+from nltk.corpus import stopwords
+import re
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
 from sklearn.externals import joblib
 from sqlalchemy import create_engine
 from sklearn.base import BaseEstimator, TransformerMixin
-import nltk
 
 
 app = Flask(__name__)
@@ -60,16 +61,33 @@ class ContainsPlace(BaseEstimator, TransformerMixin):
         X_tagged = pd.Series(X).apply(self.contains_place)
         return pd.DataFrame(X_tagged)
 
+# Replaced original function provided in this script with function used in
+# train_classifier.py
 def tokenize(text):
+    ''' Takes in a string, replaces URLs, normalises, tokenises and lematises 
+        it. Stop words are also taken care of. The tokenised string is then
+        returned.
+    INPUT
+        text - a string
+    OUTPUT
+        token - the tokenised and cleaned string
+    '''
+    # Define a regex to find URLS contained in messages
+    # Approach as taught in Udacity Data Engineering class
+    url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    # get list of all urls using regex
+    detected_urls = re.findall(url_regex, text)
+    # replace each url in text string with placeholder
+    for url in detected_urls:
+        text = text.replace(url, 'urlplaceholder')
+    text = re.sub(r'[^a-zA-Z0-9]',' ', text.lower())
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
+    stop_words = stopwords.words("english")
 
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
-
-    return clean_tokens
+    # lemmatize and remove stop words by excluding words contained in stop_words
+    tokens = [lemmatizer.lemmatize(word).strip() for word in tokens if word not in stop_words]
+    return tokens
 
 # load data
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
@@ -88,7 +106,7 @@ def index():
     # assigned to a single message and the 10 most frequent categories
     category_df = df.drop(columns=['id','message','genre','original'])
     category_df['related'].replace(2,1, inplace=True)
-    # Convert all Y columns to ints
+    # Convert all Y columns to integers
     category_df = category_df.apply(pd.to_numeric)
     category_counts = category_df.sum(axis=1).value_counts(ascending = False) 
     category_frequency = category_df.sum(axis=0).sort_values(ascending = False)
@@ -96,7 +114,6 @@ def index():
     
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     
     graph_one = []
     graph_one.append(
@@ -109,8 +126,23 @@ def index():
                 xaxis = dict(title = 'Number of Categories'),
                 yaxis = dict(title = 'Number of Observations'),
                 )
+    
+    graph_two = []
+    graph_two.append(
+          Bar(
+          x = category_frequency.index.tolist(),
+          y = category_frequency.values.tolist(),
+          )
+      )
+    
+    layout_two = dict(title = 'Frequencies of Different Categories',
+                xaxis = dict(title = 'Message Category'),
+                yaxis = dict(title = 'Number of Observations'),
+                )
+    
     graphs = []
     graphs.append(dict(data = graph_one, layout = layout_one))
+    graphs.append(dict(data=graph_two, layout = layout_two))
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
