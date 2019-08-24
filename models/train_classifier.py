@@ -145,7 +145,7 @@ def build_model():
     # Use micro average (to deal with class imbalances) of f1_score 
     # for scoring as suggested at https://knowledge.udacity.com/questions/20810
     cv = GridSearchCV(pipeline, param_grid = parameters,verbose=2, cv = 3,
-                      score = make_scorer(f1_score, average = 'micro')) 
+                      scoring = make_scorer(f1_score, average = 'micro')) 
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
