@@ -82,7 +82,7 @@ def load_data(database_filepath):
     Y = df.drop(columns=['id', 'message', 'genre', 'original'])
     # Take care of instances of category related containing a value of 2 
     # and replace them with  1
-    Y['related'].replace(2,1, inplace=True)
+    Y['related'].replace('2','1', inplace=True)
     # Convert all Y columns to ints
     Y = Y.apply(pd.to_numeric)
     # Obtain categories names from Y column names
@@ -142,10 +142,8 @@ def build_model():
     'clf__estimator__min_samples_split':[3, 4]
     }
     # Define grid search object using pipeline and parameters
-    # Use micro average (to deal with class imbalances) of f1_score 
-    # for scoring as suggested at https://knowledge.udacity.com/questions/20810
     cv = GridSearchCV(pipeline, param_grid = parameters,verbose=2, cv = 3,
-                      scoring = make_scorer(f1_score, average = 'micro')) 
+                      scoring = 'f1_micro') 
     return cv
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -192,8 +190,6 @@ def main():
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
         X, Y, category_names = load_data(database_filepath)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
-        print(X.dtypes)
-        print(Y.dtypes)
         print('Building model...')
         model = build_model()
         
