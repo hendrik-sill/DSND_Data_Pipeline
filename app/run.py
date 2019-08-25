@@ -136,8 +136,9 @@ def index():
       )
     
     layout_two = dict(title = 'Frequencies of Different Categories',
-                xaxis = dict(title = 'Message Category'),
+                xaxis = dict(title = 'Message Category', automargin='true' ),
                 yaxis = dict(title = 'Number of Observations'),
+                margin = dict(l = 50, r = 50, b = 150, t = 100)
                 )
     
     graphs = []
