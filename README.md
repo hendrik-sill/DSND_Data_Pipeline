@@ -35,7 +35,7 @@ I used Python 3.6.7 (Anaconda distribution) for this project. If you are using t
 2. Run the following command in the app's directory to run your web app.
     `python run.py`
 
-3. Go to http://0.0.0.0:3001/
+3. Go to localhost:3001 to access the web app.
 
 Please note that the pickle file of the model was rather large (283 MB) despite a compression setting of 5. I thus had to upload it using GIT LFS.
 
