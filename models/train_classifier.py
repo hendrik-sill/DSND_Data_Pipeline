@@ -7,7 +7,6 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, make_scorer
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -192,7 +191,6 @@ def main():
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
         print('Building model...')
         model = build_model()
-        
         print('Training model...')
         model.fit(X_train, Y_train)
         
