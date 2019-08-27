@@ -22,7 +22,11 @@ In the training process and the grid search I decided to use the F1 score rather
 While the overall performance of the model was rather good, extending the scope of the grid search could potentially further improve model performance. Unfortunately, saving the model as a pickle file prevented me from using more than one thread for the grid search. I tried some workaround mentioned in the Udacity knowledge base which unfortunately did not work either. Hence, despite the rather limited scope of the grid search it took about 5 hours to complete the grid search and train the model using an Intel Core i5-6600k. 
 
 ### Required Packages
-I used Python 3.6.7 (Anaconda distribution) for this project. If you are using the Anaconda distribution of Python, you will only need to install the plotly package. On other Python distributions, you may also need to install Pandas, Numpy, SQLAlchemy and scikit-learn.
+I used Python 3.6.7 (Anaconda distribution) for this project. If you are using the Anaconda distribution of Python, you will only need to install plotly, nltk and flask. On other Python distributions, you may also need to install Pandas, Numpy, SQLAlchemy and scikit-learn.
+
+Exact requirements can be found in the **requirements.txt** file in the main directory. 
+
+**Please note that you need to use scikit-learn version 0.20.3 in order to use the pickle file contained in this repository.** Otherwise loading the pickle file will fail. You can, however, create your own pickle file by running all the scripts as explained below.
 
 ### Instructions (partly taken from Udacity):
 1. Run the following commands in the project's root directory to set up your database and model.
